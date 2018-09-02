@@ -1,0 +1,49 @@
+apply plugin: "com.moowork.node"
+apply plugin: 'org.jetbrains.kotlin.frontend'
+apply plugin: 'kotlin2js'
+
+dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
+    compile 'org.jetbrains.kotlinx:kotlinx-html-js:0.6.11'
+    compile project(':common-js')
+    testCompile project(':common-js')
+    compile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version" // for now only compile configuration is supported
+}
+
+def outputDir = "$projectDir.path/src/main/web"
+
+compileKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.sourceMap = true
+    kotlinOptions.suppressWarnings = true
+    kotlinOptions.verbose = true
+    kotlinOptions.main = "call"
+    kotlinOptions.moduleKind = "umd"
+}
+
+compileTestKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.outputFile = "$project.buildDir.path/js-tests/${project.name}-tests.js"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.moduleKind = 'umd'
+    kotlinOptions.main = "call"
+}
+
+
+task copyBundleToStaticDir(type: Copy) {
+    from "${project.buildDir.path}/bundle"
+    into "$outputDir"
+}
+
+kotlinFrontend {
+    webpackBundle {
+        bundleName = "app"
+        sourceMapEnabled = true  // enable/disable source maps
+    }
+}
+
+assemble.dependsOn copyBundleToStaticDir
+
+clean.doFirst() {
+    delete "${outputDir}/app.bundle.js"
+}
