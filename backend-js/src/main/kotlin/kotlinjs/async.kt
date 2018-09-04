@@ -3,7 +3,7 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel
+package kotlinjs
 
 import kotlin.coroutines.experimental.*
 import kotlin.js.Promise
@@ -39,15 +39,3 @@ private class StandaloneCoroutine(override val context: CoroutineContext): Conti
 
     override fun resumeWithException(error: Throwable) {}
 }
-
-//suspend fun <T> Promise<T>.await(): T = suspendCoroutine { cont ->
-//    then({ cont.resume(it) }, { cont.resumeWithException(it) })
-//}
-//
-//fun launch(block: suspend () -> Unit) {
-//    block.startCoroutine(object : Continuation<Unit> {
-//        override val context: CoroutineContext get() = EmptyCoroutineContext
-//        override fun resume(value: Unit) {}
-//        override fun resumeWithException(e: Throwable) { console.log("Coroutine failed: $e") }
-//    })
-//}

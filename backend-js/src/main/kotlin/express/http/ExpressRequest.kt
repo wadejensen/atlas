@@ -3,11 +3,11 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel.http
+package express.http
 
-import pappel.JSONUtils
+import express.JSONUtils
 
-class Request(external private val req: dynamic) {
+class ExpressRequest(external private val req: dynamic) {
 
     val baseURL: String
     val body: Map<String, Any>?

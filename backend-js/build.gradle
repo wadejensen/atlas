@@ -40,8 +40,4 @@ task assembleJs(type: Copy) {
     dependsOn classes
 }
 
-//task jar2Module(type: NodeTask) {
-//
-//}
-
 assemble.dependsOn assembleJs

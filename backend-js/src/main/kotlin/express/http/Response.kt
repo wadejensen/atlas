@@ -3,9 +3,9 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel.http
+package express.http
 
-import pappel.JSONUtils
+import express.JSONUtils
 
 /**
  * HTTP Response class.

@@ -2,4 +2,4 @@
 "use strict";
 let backend_js = require('backend-js');
 
-backend_js.com.wadejensen.example.start();
+backend_js.com.wadejensen.atlas.start();

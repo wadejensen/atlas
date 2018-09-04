@@ -3,7 +3,7 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel.http
+package express.http
 
 /**
  * Enum type for HTTP protocols.

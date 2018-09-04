@@ -3,7 +3,7 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel.http
+package express.http
 
 enum class Status(val code: Int) {
     CONTINUE(100),

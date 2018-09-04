@@ -1,15 +1,19 @@
-package com.wadejensen.example
+package com.wadejensen.atlas
 
-import com.wadejensen.example.model.Person
+//import com.wadejensen.atlas.flatmates.FlatmatesClient
+import com.wadejensen.atlas.model.Person
+import com.wadejensen.example.Console
+import com.wadejensen.example.Math
+import com.wadejensen.example.SharedClass
 import org.w3c.fetch.Response
-import pappel.Application
-import pappel.await
-import pappel.*
-import pappel.http.Method
-import pappel.http.RequestInit
+import express.Application
+import kotlinjs.await
+import kotlinjs.*
+import express.http.Method
+import kotlinjs.http.Request
+import kotlinjs.http.fetch
 import kotlin.js.Promise
 
-import kotlinx.serialization.*
 import kotlinx.serialization.json.JSON
 
 external val process: dynamic
@@ -29,6 +33,11 @@ fun start() {
     val shared = SharedClass(Console(), Math())
 
     val app = Application()
+
+//    async {
+//        val flatmatesClient = FlatmatesClient.auth()
+//        println(flatmatesClient)
+//    }
 
     app.get("/primes") { _, _ ->
         shared.platform = "Node.js"
@@ -68,12 +77,12 @@ fun start() {
         val wade = "{\"name\":\"Wade Jensen\", \"age\": 22, \"address\": {\"streetNum\": 123, \"streetName\": \"Fake street\", \"suburb\": \"Surry Hills\", \"postcode\": 2010}}"
         val person: Person = JSON.parse<Person>(wade)
         async {
-            val request = RequestInit(
+            val request = Request(
                 method  = Method.POST,
                 headers = mapOf("username" to "wjensen", "password" to "1234567"),
                 body    = person)
 
-            println("Request object:")
+            println("ExpressRequest object:")
             console.dir(request)
 
             val resp = await { fetch("https://jsonplaceholder.typicode.com/posts", request) }

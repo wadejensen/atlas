@@ -3,7 +3,7 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package pappel
+package express
 
 import kotlin.js.Json
 import kotlin.js.json

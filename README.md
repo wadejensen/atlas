@@ -33,7 +33,7 @@ gradle build
 
 ### Creating the Express app
 ```kt
-import pappel.Application
+import express.Application
 
 val shared = SharedClass(Console(), Math())
 val app = Application()
