@@ -1,36 +1,7 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-buildscript {
-
-    ext {
-        kotlin_version = "1.2.60"
-        serialization_version = "0.6.1"
-    }
-
-    repositories {
-        jcenter()
-        mavenCentral()
-        google()
-        maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
-        maven { url "https://plugins.gradle.org/m2/" }
-        maven { url "https://dl.bintray.com/kotlin/kotlin-eap" }
-        maven { url "https://kotlin.bintray.com/kotlinx" }
-    }
-
-    dependencies {
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.moowork.gradle:gradle-node-plugin:1.2.0"
-        classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.31"
-        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
-    }
-}
-
 allprojects {
-    repositories {
-        jcenter()
-        google()
-        maven { url 'http://dl.bintray.com/kotlin/kotlin-eap-1.2' }
-        maven { url 'https://jitpack.io' }
-    }
+
+    group "com.wadejensen.atlas"
+    version "0.0.1-SNAPSHOT"
 
     tasks.withType(Test) {
         testLogging {
@@ -39,3 +10,60 @@ allprojects {
         }
     }
 }
+
+// TODO: bump to 4.10
+wrapper {
+    gradleVersion = '4.9'
+    distributionUrl = "https://services.gradle.org/distributions/gradle-$gradleVersion-all.zip"
+}
+
+buildscript {
+    ext.kotlinVersion = '1.2.61'
+    ext.serialization_version = "0.6.1"
+
+    repositories {
+        jcenter()
+        mavenCentral()
+        maven { url "https://dl.bintray.com/kotlin/kotlinx" }
+        maven { url "https://plugins.gradle.org/m2/" }
+        maven { url "https://kotlin.bintray.com/kotlinx" }
+        //maven { url 'https://jitpack.io' }
+        //google()
+        //maven { url 'http://oss.sonatype.org/content/repositories/snapshots' }
+    }
+    dependencies {
+        classpath "com.eriwen:gradle-js-plugin:2.14.1"
+        classpath 'com.moowork.gradle:gradle-node-plugin:1.2.0'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlinx:kotlinx-gradle-serialization-plugin:$serialization_version"
+    }
+}
+
+ext {
+    nodeVersion = '8.11.4'
+    qunitVersion = '2.6.2'
+
+    libraries = [
+            junit: "junit:junit:4.12",
+            kotlin_stdlib: "org.jetbrains.kotlin:kotlin-stdlib:$kotlinVersion",
+            kotlin_stdlib_common: "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion",
+            kotlin_stdlib_js: "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlinVersion",
+            kotlin_test_annotations_common: "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlinVersion",
+            kotlin_test_common: "org.jetbrains.kotlin:kotlin-test-common:$kotlinVersion",
+            kotlin_test_js: "org.jetbrains.kotlin:kotlin-test-js:$kotlinVersion",
+            kotlin_test_junit: "org.jetbrains.kotlin:kotlin-test-junit:$kotlinVersion",
+            // classpath "org.jetbrains.kotlin:kotlin-frontend-plugin:0.0.31"
+            kotlin_serialization: "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serialization_version",
+            kotlin_serialization_common: "org.jetbrains.kotlinx-serialization-runtime-common:$serialization_version",
+            kotlin_serialization_js: "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$serialization_version"
+
+    ]
+}
+
+subprojects {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+}
+

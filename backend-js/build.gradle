@@ -1,43 +1,58 @@
-apply plugin: "com.moowork.node"
-apply plugin: "kotlin2js"
+apply plugin: 'kotlin-platform-js'
+apply plugin: 'com.moowork.node'
 apply plugin: 'kotlinx-serialization'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-js:js-$kotlin_version"
-    compile "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$serialization_version"
-    compile project(':common-js')
+    compile libraries.kotlin_stdlib_js
+    compile libraries.kotlin_serialization_js
+    compile project(":common-js")
+    testCompile libraries.kotlin_test_js
 }
 
 repositories {
-    jcenter()
     maven { url "https://kotlin.bintray.com/kotlinx" }
 }
 
-compileKotlin2Js {
-    kotlinOptions.metaInfo = true
-    kotlinOptions.sourceMap = true
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.verbose = true
-    kotlinOptions.main = "call"
+[compileKotlin2Js, compileTestKotlin2Js]*.configure {
     kotlinOptions.moduleKind = "umd"
+    kotlinOptions.sourceMap = true
+    kotlinOptions.sourceMapEmbedSources = "always"
 }
 
-def outputDir = "${projectDir}/node_modules"
-
-task assembleJs(type: Copy) {
-    configurations.compile.each { File file ->
-        from(zipTree(file.absolutePath), {
-            includeEmptyDirs = false
-            include { fileTreeElement ->
-                def path = fileTreeElement.path
-                path.endsWith(".js") && (path.startsWith("META-INF/resources/") ||
-                        !path.startsWith("META-INF/"))
-            }
-        })
-    }
+task populateNodeModules(type: Copy, dependsOn: compileKotlin2Js) {
     from compileKotlin2Js.destinationDir
-    into "${outputDir}"
-    dependsOn classes
+
+    configurations.testCompile.each {
+        from zipTree(it.absolutePath).matching { include '*.js' }
+    }
+
+    into "${buildDir}/node_modules"
 }
 
-assemble.dependsOn assembleJs
+node {
+    version = nodeVersion
+    download = true
+}
+
+task installQunit(type: NpmTask) {
+    inputs.property('qunitVersion', qunitVersion)
+    outputs.dir file('node_modules/qunit')
+
+    args = ['install', "qunit@${qunitVersion}"]
+}
+
+task runQunit(type: NodeTask, dependsOn: [compileTestKotlin2Js, populateNodeModules, installQunit]) {
+    script = file('node_modules/qunit/bin/qunit')
+    args = [projectDir.toPath().relativize(file(compileTestKotlin2Js.outputFile).toPath())]
+}
+
+test.dependsOn runQunit
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.kotlin
+}
+
+artifacts {
+    archives sourcesJar
+}

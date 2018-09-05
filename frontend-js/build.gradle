@@ -1,49 +1,82 @@
-apply plugin: "com.moowork.node"
-apply plugin: 'org.jetbrains.kotlin.frontend'
+import com.google.javascript.jscomp.CompilerOptions
+
 apply plugin: 'kotlin2js'
+apply plugin: 'kotlin-dce-js'
+apply plugin: "com.eriwen.gradle.js"
+apply plugin: 'com.moowork.node'
+
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlin_version"
-    compile 'org.jetbrains.kotlinx:kotlinx-html-js:0.6.11'
     compile project(':common-js')
-    testCompile project(':common-js')
-    compile "org.jetbrains.kotlin:kotlin-test-js:$kotlin_version" // for now only compile configuration is supported
+    compile libraries.kotlin_stdlib_js
+    testCompile libraries.kotlin_test_js
 }
 
-def outputDir = "$projectDir.path/src/main/web"
-
-compileKotlin2Js {
-    kotlinOptions.metaInfo = true
-    kotlinOptions.sourceMap = true
-    kotlinOptions.suppressWarnings = true
-    kotlinOptions.verbose = true
-    kotlinOptions.main = "call"
+[compileKotlin2Js, compileTestKotlin2Js]*.configure {
     kotlinOptions.moduleKind = "umd"
-}
-
-compileTestKotlin2Js {
-    kotlinOptions.metaInfo = true
-    kotlinOptions.outputFile = "$project.buildDir.path/js-tests/${project.name}-tests.js"
     kotlinOptions.sourceMap = true
-    kotlinOptions.moduleKind = 'umd'
-    kotlinOptions.main = "call"
+    kotlinOptions.sourceMapEmbedSources = "always"
 }
 
-
-task copyBundleToStaticDir(type: Copy) {
-    from "${project.buildDir.path}/bundle"
-    into "$outputDir"
+combineJs {
+    source = [
+            // The order is important. That's why the documented way with a reference to a source set using wildcards
+            // is not used.
+            "${buildDir}/kotlin-js-min/main/kotlin.js",
+            "${buildDir}/kotlin-js-min/main/kotlin-multiplatform-atlas-js.js",
+            "${buildDir}/kotlin-js-min/main/js-app.js"
+    ]
+    dest = file("${temporaryDir}/${archivesBaseName}-combined.js")
 }
 
-kotlinFrontend {
-    webpackBundle {
-        bundleName = "app"
-        sourceMapEnabled = true  // enable/disable source maps
+minifyJs {
+    source = combineJs
+    dest = file("${temporaryDir}/${archivesBaseName}-minified.js")
+    closure {
+        compilerOptions = new CompilerOptions().with {
+            setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5)
+            return it
+        }
     }
 }
 
-assemble.dependsOn copyBundleToStaticDir
+combineJs.dependsOn runDceKotlinJs
+build.dependsOn minifyJs
 
-clean.doFirst() {
-    delete "${outputDir}/app.bundle.js"
+task minifiedJar(type: Jar) {
+    classifier = 'minified'
+    from minifyJs
+}
+
+task populateNodeModules(type: Copy, dependsOn: compileKotlin2Js) {
+    from compileKotlin2Js.destinationDir
+
+    configurations.testCompile.each {
+        from zipTree(it.absolutePath).matching { include '*.js' }
+    }
+
+    into "${buildDir}/node_modules"
+}
+
+node {
+    version = nodeVersion
+    download = true
+}
+
+task installQunit(type: NpmTask) {
+    inputs.property('qunitVersion', qunitVersion)
+    outputs.dir file('node_modules/qunit')
+
+    args = ['install', "qunit@${qunitVersion}"]
+}
+
+task runQunit(type: NodeTask, dependsOn: [compileTestKotlin2Js, populateNodeModules, installQunit]) {
+    script = file('node_modules/qunit/bin/qunit')
+    args = [projectDir.toPath().relativize(file(compileTestKotlin2Js.outputFile).toPath())]
+}
+
+test.dependsOn runQunit
+
+artifacts {
+    archives minifiedJar
 }
