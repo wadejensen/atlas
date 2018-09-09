@@ -33,14 +33,6 @@ open class SharedClassTest {
         sharedClass.platform = PLATFORM_INDEPENDENT
     }
 
-
-    @Test
-    fun testPrimes() {
-        for (i in 0..1000) {
-            assertEquals(primes.asList().subList(0, i), sharedClass.calcPrimes(i.toLong()), "checking list of first $i primes")
-        }
-    }
-
     @Test
     fun testPrintMe() {
         sharedClass.printMe()

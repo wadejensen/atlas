@@ -32,23 +32,6 @@ class DisjunctionTest {
         assertEquals(right.get(), "kotlin")
     }
 
-    //[Test(expectedExceptions = array(javaClass<NoSuchElementException>()))]
-
-    @Test fun getWithException() {
-        try {
-            assertEquals(right.swap().get(), 5)
-            fail()
-        } catch(e: Exception) {
-            //expected
-        }
-        try {
-            assertEquals(left.get(), "kotlin")
-            fail()
-        } catch(e: Exception) {
-            //Expected
-        }
-    }
-
     @Test fun forEach() {
         left.swap().forEach {
             assertEquals(it * 2, 10)
@@ -84,11 +67,6 @@ class DisjunctionTest {
         assertEquals(left.swap().filter { it == 6 }, None)
         assertEquals(right.filter { it.startsWith('k') }.get().get(), "kotlin")
         assertEquals(right.filter { it.startsWith('j') }, None)
-    }
-
-    @Test fun toList() {
-        assertEquals(left.swap().toList(), listOf(5))
-        assertEquals(left.toList(), listOf<Int>())
     }
 
     @Test fun toOption() {

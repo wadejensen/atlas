@@ -39,23 +39,6 @@ class EitherTest {
         assertEquals(right.right().get(), "kotlin")
     }
 
-    //[Test(expectedExceptions = array(javaClass<NoSuchElementException>()))]
-
-    @Test fun getWithException() {
-        try {
-            assertEquals(right.left().get(), 5)
-            fail()
-        } catch(e: Exception) {
-            //expected
-        }
-        try {
-            assertEquals(left.right().get(), "kotlin")
-            fail()
-        } catch(e: Exception) {
-            //Expected
-        }
-    }
-
     @Test fun forEach() {
         left.left().forEach {
             assertEquals(it * 2, 10)

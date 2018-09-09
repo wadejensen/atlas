@@ -105,11 +105,6 @@ class OptionTest {
         assertEquals(none.orElse { Some("java") }.get(), "java")
     }
 
-    @Test fun toList() {
-        assertEquals(some.toList(), listOf("kotlin"))
-        assertEquals(none.toList(), listOf<String>())
-    }
-
     @Test fun firstOption() {
         val l = listOf(1, 2, 3, 4, 5, 6)
         assertEquals(l.firstOption(), Some(1))

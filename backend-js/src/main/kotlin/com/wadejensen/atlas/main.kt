@@ -1,6 +1,7 @@
 package com.wadejensen.atlas
 
-//import com.wadejensen.atlas.flatmates.FlatmatesClient
+import com.wadejensen.atlas.flatmates.FlatmatesClient
+import com.wadejensen.atlas.flatmates.auth
 import com.wadejensen.atlas.model.Person
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
@@ -35,15 +36,15 @@ fun start() {
 
     val app = Application()
 
-//    async {
-//        val flatmatesClient = FlatmatesClient.auth()
-//        println(flatmatesClient)
-//    }
+    async {
+        val flatmatesClient = FlatmatesClient("wade", "jensen").auth()
+        println(flatmatesClient)
+    }
 
     app.get("/primes") { _, _ ->
         shared.platform = "Node.js"
         shared.printMe()
-        println(shared.givePrimes(200))
+        println(shared.givePrimes(100))
     }
 
     /**

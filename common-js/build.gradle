@@ -1,10 +1,10 @@
+apply plugin: "com.moowork.node"
 apply plugin: 'kotlin-platform-js'
-apply plugin: 'com.moowork.node'
-
-archivesBaseName = 'kotlin-multiplatform-atlas-common-js'
+apply plugin: 'kotlin-dce-js'
 
 dependencies {
     expectedBy project(':common')
+    expectedBy project(':fp')
     compile libraries.kotlin_stdlib_js
     testCompile libraries.kotlin_test_js
 }
@@ -15,19 +15,20 @@ dependencies {
     kotlinOptions.sourceMapEmbedSources = "always"
 }
 
-task populateNodeModules(type: Copy, dependsOn: compileKotlin2Js) {
-    from compileKotlin2Js.destinationDir
+def outputDir = "${projectDir}/node_modules"
 
+task populateNodeModules(type: Copy, dependsOn: [compileKotlin2Js, compileTestKotlin2Js]) {
+    from compileKotlin2Js.destinationDir
+    configurations.compile.each {
+        from zipTree(it.absolutePath).matching { include '*.js' }
+    }
+    into "${outputDir}"
+
+    from compileKotlin2Js.destinationDir
     configurations.testCompile.each {
         from zipTree(it.absolutePath).matching { include '*.js' }
     }
-
-    into "${buildDir}/node_modules"
-}
-
-node {
-    version = nodeVersion
-    download = true
+    into "${outputDir}"
 }
 
 task installQunit(type: NpmTask) {
@@ -42,13 +43,5 @@ task runQunit(type: NodeTask, dependsOn: [compileTestKotlin2Js, populateNodeModu
     args = [projectDir.toPath().relativize(file(compileTestKotlin2Js.outputFile).toPath())]
 }
 
+assemble.dependsOn populateNodeModules
 test.dependsOn runQunit
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.kotlin
-}
-
-artifacts {
-    archives sourcesJar
-}

@@ -1,6 +1,5 @@
 package com.wadejensen.example
 
-import com.wadejensen.example.DOMConsole
 import org.w3c.dom.events.Event
 import kotlin.browser.document
 
@@ -23,7 +22,7 @@ fun start(ev: Event) {
     val shared = SharedClass(DOMConsole(), Math())
     shared.platform = "JavaScript Browser"
     shared.printMe()
-    shared.printPrimes(1000)
+    shared.printPrimes(100)
 }
 
 

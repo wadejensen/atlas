@@ -8,7 +8,7 @@
 if [ $# -ne 2 ]; then
   echo <<<USAGE
 
-Usage: nodemon --exec "./hot_reload.sh <image_name> <port>"
+Usage: nodemon --exec "./hot_reload.sh <image_name> <port>" \
 
 USAGE
 fi

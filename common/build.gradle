@@ -1,18 +1,7 @@
 apply plugin: 'kotlin-platform-common'
 
-archivesBaseName = 'kotlin-multiplatform-atlas-common'
-
 dependencies {
-    compile libraries.kotlin_stdlib_common
-    testCompile libraries.kotlin_test_annotations_common
-    testCompile libraries.kotlin_test_common
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.kotlin
-}
-
-artifacts {
-    archives sourcesJar
+    compile "org.jetbrains.kotlin:kotlin-stdlib-common:$kotlinVersion"
+    testCompile "org.jetbrains.kotlin:kotlin-test-annotations-common:$kotlinVersion"
+    testCompile "org.jetbrains.kotlin:kotlin-test-common:$kotlinVersion"
 }

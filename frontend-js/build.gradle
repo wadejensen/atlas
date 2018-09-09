@@ -1,66 +1,50 @@
-import com.google.javascript.jscomp.CompilerOptions
-
+apply plugin: "com.moowork.node"
 apply plugin: 'kotlin2js'
 apply plugin: 'kotlin-dce-js'
-apply plugin: "com.eriwen.gradle.js"
-apply plugin: 'com.moowork.node'
-
 
 dependencies {
+    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlinVersion"
+    compile 'org.jetbrains.kotlinx:kotlinx-html-js:0.6.11'
     compile project(':common-js')
-    compile libraries.kotlin_stdlib_js
-    testCompile libraries.kotlin_test_js
+    compile "org.jetbrains.kotlin:kotlin-test-js:$kotlinVersion" // for now only compile configuration is supported
 }
 
-[compileKotlin2Js, compileTestKotlin2Js]*.configure {
-    kotlinOptions.moduleKind = "umd"
+compileKotlin2Js {
+    kotlinOptions.metaInfo = true
     kotlinOptions.sourceMap = true
     kotlinOptions.sourceMapEmbedSources = "always"
+    kotlinOptions.suppressWarnings = true
+    kotlinOptions.verbose = true
+    kotlinOptions.main = "call"
+    kotlinOptions.moduleKind = "umd"
 }
 
-combineJs {
-    source = [
-            // The order is important. That's why the documented way with a reference to a source set using wildcards
-            // is not used.
-            "${buildDir}/kotlin-js-min/main/kotlin.js",
-            "${buildDir}/kotlin-js-min/main/kotlin-multiplatform-atlas-js.js",
-            "${buildDir}/kotlin-js-min/main/js-app.js"
-    ]
-    dest = file("${temporaryDir}/${archivesBaseName}-combined.js")
+compileTestKotlin2Js {
+    kotlinOptions.metaInfo = true
+    kotlinOptions.sourceMap = true
+    kotlinOptions.sourceMapEmbedSources = "always"
+    kotlinOptions.moduleKind = 'umd'
+    kotlinOptions.main = "call"
 }
 
-minifyJs {
-    source = combineJs
-    dest = file("${temporaryDir}/${archivesBaseName}-minified.js")
-    closure {
-        compilerOptions = new CompilerOptions().with {
-            setLanguage(CompilerOptions.LanguageMode.ECMASCRIPT5)
-            return it
-        }
-    }
+def outputDir = "${projectDir}/node_modules"
+def trimmedJsDir = "${buildDir}/kotlin-js-min"
+def webDir = "${projectDir}/src/main/web"
+def bundleFilename = "atlas.min.js"
+
+task populateNodeModules(type: Copy, dependsOn: [compileKotlin2Js, compileTestKotlin2Js, runDceKotlinJs]) {
+    from "${trimmedJsDir}/main"
+    include "*"
+    into "${outputDir}"
 }
 
-combineJs.dependsOn runDceKotlinJs
-build.dependsOn minifyJs
+task webpack(type: Exec) {
+    outputs.dir(webDir)
 
-task minifiedJar(type: Jar) {
-    classifier = 'minified'
-    from minifyJs
-}
-
-task populateNodeModules(type: Copy, dependsOn: compileKotlin2Js) {
-    from compileKotlin2Js.destinationDir
-
-    configurations.testCompile.each {
-        from zipTree(it.absolutePath).matching { include '*.js' }
-    }
-
-    into "${buildDir}/node_modules"
-}
-
-node {
-    version = nodeVersion
-    download = true
+    commandLine "$projectDir/node_modules/.bin/webpack",
+            "--mode", "production",
+            "--entry", "${outputDir}/frontend-js.js",
+            "--output", "${webDir}/${bundleFilename}"
 }
 
 task installQunit(type: NpmTask) {
@@ -70,13 +54,53 @@ task installQunit(type: NpmTask) {
     args = ['install', "qunit@${qunitVersion}"]
 }
 
-task runQunit(type: NodeTask, dependsOn: [compileTestKotlin2Js, populateNodeModules, installQunit]) {
+task runQunit(type: NodeTask, dependsOn: [compileTestKotlin2Js, installQunit]) {
     script = file('node_modules/qunit/bin/qunit')
     args = [projectDir.toPath().relativize(file(compileTestKotlin2Js.outputFile).toPath())]
 }
 
-test.dependsOn runQunit
-
-artifacts {
-    archives minifiedJar
+task copyTestSrcs(type: Copy, dependsOn: compileTestKotlin2Js) {
+    from compileKotlin2Js.destinationDir
+    configurations.testCompile.each {
+        from zipTree(it.absolutePath).matching { include '*.js' }
+    }
+    into "${outputDir}"
 }
+
+task cleanNodeModules(type: Delete) {
+    delete fileTree("${outputDir}") {
+        include "*.js"
+        include "*.js.map"
+    }
+}
+
+task cleanWebDir(type: Delete) {
+    delete fileTree("${webDir}") {
+        include "**/*.js"
+    }
+}
+
+task prepareJsSources(type: GradleBuild) {
+    tasks = [
+        "cleanWebDir",
+        "cleanNodeModules",
+        "npmInstall",
+        "populateNodeModules",
+        "webpack",
+        "cleanNodeModules",
+    ]
+}
+
+task testJs(type: GradleBuild) {
+    tasks = [
+        "copyTestSrcs",
+        "runQunit",
+        "cleanNodeModules",
+    ]
+}
+
+clean.dependsOn cleanWebDir
+
+assemble.dependsOn prepareJsSources
+
+test.finalizedBy testJs
