@@ -59,9 +59,6 @@ data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
             body = GetMapMarkersRequestBody(lat1, lon1, lat2, lon2, requestType, minPrice, maxPrice)
         )
 
-        async { delay(10000); console.dir(request) }.await()
-
-
         // make request
         val resp= fetch("https://flatmates.com.au/map_markers", request).await()
         val data = resp.json().await()
@@ -71,7 +68,7 @@ data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
 //        }
 
         // parse data and handle errors
-        return TODO()
+        return Try { listOf(Any()) }
     }
 
     companion object {

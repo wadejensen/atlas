@@ -1,6 +1,7 @@
 package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
+import com.wadejensen.atlas.flatmates.RequestType
 import com.wadejensen.atlas.model.Person
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
@@ -42,47 +43,34 @@ fun start() {
     println(shared.givePrimes(2))
 
     val x = async {
-        println("Start async  ")
+        println("Start async")
         val resp: Response = fetch("https://jsonplaceholder.typicode.com/todos/1").await()
         val data: Any? = resp.json().await()
-        println("data")
-        println(data)
         console.dir(data!!)
-        println("after resp")
 
-        println("before flatmates requesttt")
         // Initial unsafe calls to authorise with provider APIs
         // Will throw exceptions and cause node process to exit in failure case
         val (flatmatesClient, nextClient) = initApiClients()
 
         console.dir(flatmatesClient)
-        println(nextClient)
-    }
-//
-//        val (flatmatesClient, nextClient) = initApiClients()
-//
-//    }
 
-    println("After async")
+        val listings = flatmatesClient.mapMarkersApi(
+            lat1 = -33.878453691548835,
+            lon1 = 151.16001704415282,
+            lat2 = -33.90481527152859,
+            lon2 = 151.2626705475708,
+            requestType = RequestType.ROOMS,
+            minPrice = 100.0,
+            maxPrice = 2000.0)
 
-    async {
+        println("Num listings found")
+        console.dir(listings.success().size)
 
-    }
-//
-//        setupRoutes(app, shared, flatmatesClient)
-//
-//        println(shared.givePrimes(4))
-//
-//        println("All routes setup.")
+        setupRoutes(app, shared, flatmatesClient)
 
-//        val data = flatmatesClient.mapMarkersApi(
-//            lat1 = -33.878453691548835,
-//            lon1 = 151.16001704415282,
-//            lat2 = -33.90481527152859,
-//            lon2 = 151.2626705475708,
-//            requestType = RequestType.ROOMS,
-//            minPrice = 100.0,
-//            maxPrice = 2000.0)
+        println(shared.givePrimes(4))
+
+        println("All routes setup.")
 
         app.startHttpServer(3000)
         println("HTTP server started.")
@@ -93,7 +81,7 @@ fun start() {
         app.serveStaticContent(staticWebContentPath)
 
         println("Kotlin - Node.js webserver ready.")
-    //}
+    }
 }
 
 suspend fun initApiClients(): Pair<FlatmatesClient, String> {
