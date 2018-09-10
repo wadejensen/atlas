@@ -39,6 +39,7 @@ buildscript {
 ext {
     nodeVersion = '8.11.4'
     qunitVersion = '2.6.2'
+    coroutinesVersion = "0.24.0"
 
     libraries = [
         junit: "junit:junit:4.12",
@@ -52,6 +53,9 @@ ext {
         kotlin_serialization: "org.jetbrains.kotlinx:kotlinx-serialization-runtime:$serialization_version",
         kotlin_serialization_common: "org.jetbrains.kotlinx-serialization-runtime-common:$serialization_version",
         kotlin_serialization_js: "org.jetbrains.kotlinx:kotlinx-serialization-runtime-js:$serialization_version",
+        kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
+        kotlin_coroutines_common: "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$coroutinesVersion",
+        kotlin_coroutines_js: "org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$coroutinesVersion",
     ]
 }
 

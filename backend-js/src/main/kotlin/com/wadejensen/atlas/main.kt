@@ -1,22 +1,25 @@
 package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
-import com.wadejensen.atlas.flatmates.auth
 import com.wadejensen.atlas.model.Person
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
 import com.wadejensen.example.SharedClass
-import org.w3c.fetch.Response
 import express.Application
-import kotlinjs.await
-import kotlinjs.*
 import express.http.Method
 import kotlinjs.http.Request
 import kotlinjs.http.fetch
+import kotlinjs.require
+import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.await
+import kotlinx.coroutines.experimental.launch
+import org.w3c.fetch.Response
 import kotlin.js.Promise
-
-import kotlinx.serialization.json.JSON
-
+import org.funktionale.Try
+import org.funktionale.failure
+import org.funktionale.isSuccess
+import org.funktionale.success
+import kotlinx.serialization.json.JSON as Json
 
 external val process: dynamic
 external val __dirname: dynamic
@@ -32,14 +35,92 @@ fun main(vararg args: String) {
  * We start this function from app.js"
  */
 fun start() {
-    val shared = SharedClass(Console(), Math())
 
     val app = Application()
+    val shared = SharedClass(Console(), Math())
+
+    println(shared.givePrimes(2))
+
+    val x = async {
+        println("Start async  ")
+        val resp: Response = fetch("https://jsonplaceholder.typicode.com/todos/1").await()
+        val data: Any? = resp.json().await()
+        println("data")
+        println(data)
+        console.dir(data!!)
+        println("after resp")
+
+        println("before flatmates requesttt")
+        // Initial unsafe calls to authorise with provider APIs
+        // Will throw exceptions and cause node process to exit in failure case
+        val (flatmatesClient, nextClient) = initApiClients()
+
+        console.dir(flatmatesClient)
+        println(nextClient)
+    }
+//
+//        val (flatmatesClient, nextClient) = initApiClients()
+//
+//    }
+
+    println("After async")
 
     async {
-        val flatmatesClient = FlatmatesClient("wade", "jensen").auth()
-        println(flatmatesClient)
+
     }
+//
+//        setupRoutes(app, shared, flatmatesClient)
+//
+//        println(shared.givePrimes(4))
+//
+//        println("All routes setup.")
+
+//        val data = flatmatesClient.mapMarkersApi(
+//            lat1 = -33.878453691548835,
+//            lon1 = 151.16001704415282,
+//            lat2 = -33.90481527152859,
+//            lon2 = 151.2626705475708,
+//            requestType = RequestType.ROOMS,
+//            minPrice = 100.0,
+//            maxPrice = 2000.0)
+
+        app.startHttpServer(3000)
+        println("HTTP server started.")
+
+        val path = require("path")
+        val staticWebContentPath = path.join(__dirname, "../../frontend-js/src/main/web") as String
+        println("Serving content from: $staticWebContentPath")
+        app.serveStaticContent(staticWebContentPath)
+
+        println("Kotlin - Node.js webserver ready.")
+    //}
+}
+
+suspend fun initApiClients(): Pair<FlatmatesClient, String> {
+    println("start init api clients")
+
+    val flatmatesClientOrErr: Try<FlatmatesClient> = FlatmatesClient.create()
+
+    println("created client")
+    println(flatmatesClientOrErr)
+
+    if (flatmatesClientOrErr.isSuccess()) {
+        val flatmatesClient = flatmatesClientOrErr.success()
+        println(flatmatesClient)
+        return Pair(flatmatesClient, "Other clientelle")
+    }
+    else {
+        println("Could not contact flatmates.com.au API")
+        println(flatmatesClientOrErr.failure())
+        println(flatmatesClientOrErr.failure().cause)
+        //process.exit(1)
+
+        // We will never get here
+        throw Exception("Could not contact flatmates.com.au API", flatmatesClientOrErr.failure())
+    }
+}
+
+fun setupRoutes(app: Application, shared: SharedClass, flatmatesClient: FlatmatesClient): Unit {
 
     app.get("/primes") { _, _ ->
         shared.platform = "Node.js"
@@ -56,13 +137,13 @@ fun start() {
         println("async-get route pinged")
 
         async {
-            val resp: Response = await { fetch("https://jsonplaceholder.typicode.com/todos/1") }
-            val data: Any? = await { resp.json() }
+            val resp: Response = fetch("https://jsonplaceholder.typicode.com/todos/1").await()
+            val data: Any? = resp.json().await()
 
             data?.also {
                 console.dir(data)
+                res.send(JSON.stringify(data))
             }
-            res.send(JSON.stringify(data as Any))
         }
     }
 
@@ -77,7 +158,7 @@ fun start() {
         println("async-post route pinged")
 
         val wade = "{\"name\":\"Wade Jensen\", \"age\": 22, \"address\": {\"streetNum\": 123, \"streetName\": \"Fake street\", \"suburb\": \"Surry Hills\", \"postcode\": 2010}}"
-        val person: Person = JSON.parse<Person>(wade)
+        val person = JSON.parse<Person>(wade)
         async {
             val request = Request(
                 method  = Method.POST,
@@ -87,8 +168,8 @@ fun start() {
             println("ExpressRequest object:")
             console.dir(request)
 
-            val resp = await { fetch("https://jsonplaceholder.typicode.com/posts", request) }
-            val data: Any? = await { resp.json() }
+            val resp = fetch("https://jsonplaceholder.typicode.com/posts", request).await()
+            val data: Any? = resp.json().await()
             data?.also {
                 println("Response object:")
                 console.dir(data)
@@ -135,13 +216,4 @@ fun start() {
                 res.send(strResult)
             }
     }
-
-    app.startHttpServer(3000)
-    val path = require("path")
-
-    val staticWebContentPath = path.join(__dirname, "../../frontend-js/src/main/web") as String
-    println("Serving content from: $staticWebContentPath")
-    app.serveStaticContent(staticWebContentPath)
-
-    println("Kotlin - Node.js webserver ready.")
 }

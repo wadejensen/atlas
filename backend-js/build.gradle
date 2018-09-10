@@ -9,6 +9,7 @@ node {
 dependencies {
     compile libraries.kotlin_stdlib_js
     compile libraries.kotlin_serialization_js
+    compile libraries.kotlin_coroutines_js
     compile project(':common-js')
     testCompile libraries.kotlin_test_js
 }

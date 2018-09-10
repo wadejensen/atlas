@@ -1,31 +1,17 @@
 package kotlinjs.http
 
+import kotlinx.coroutines.experimental.await
+import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
+import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.js.Promise
 
-/**
- *  A typed wrapper around the window.fetch browser API, ported to Node.js
- *  https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
- *  Used to make HTTP requests.
- *
- *  @property url The origin of the resource being fetched
- *  @return // TODO
- */
-fun fetch(url: String): Promise<Response> {
-    return Fetch.jsFetch(url) as Promise<Response>
+fun fetch(input: dynamic): Promise<Response> {
+    return Fetch.jsFetch(input) as Promise<Response>
 }
 
-/**
- *  A typed wrapper around the window.fetch browser API, ported to Node.js
- *  https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/fetch
- *  Used to make HTTP requests.
- *
- *  @property url The origin of the resource being fetched
- *  @property init The request
- *  @return // TODO
- */
-fun fetch(url: String, request: Request): Promise<Response> {
-    return Fetch.jsFetch(url, request.toRequestInit().asDynamic())
+fun fetch(input: dynamic, init: RequestInit): Promise<Response> {
+    return Fetch.jsFetch(input, init.asDynamic())
 }
 
 object Fetch {

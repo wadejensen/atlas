@@ -7,6 +7,7 @@ package express
 
 import express.http.ExpressRequest
 import express.http.Response
+import kotlinjs.require
 
 external val process: dynamic
 external val __dirname: dynamic
@@ -20,15 +21,15 @@ external val __dirname: dynamic
  * See from https://github.com/blazer82/pappel-framework
  */
 class Application {
-    private val express: dynamic = kotlinjs.require("express")
+    private val express: dynamic = require("express")
     private val app: dynamic = express()
-    private val router: ExpressRouter = express.Router()
+    private val expressRouter: ExpressRouter = express.Router()
 
     fun startHttpServer(port: Int): Unit {
         println("Starting server on port ${port}.")
-        val bodyParser = kotlinjs.require("body-parser")
+        val bodyParser = require("body-parser")
         app.use(bodyParser.raw())
-        val http = kotlinjs.require("http")
+        val http = require("http")
         http.createServer(this.app)
         listen(port) // TODO accept callback lambda
         println("Server started successfully")
@@ -43,34 +44,34 @@ class Application {
 
     /**
      * Handles all requests for [path].
-     * @param path Path relative to the router's base path
+     * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
     fun all(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
         app.all(path) {
-            req, res -> callback.invoke(express.Request(req), express.Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), Response(res))
         }
     }
 
     /**
      * Handles DELETE requests for [path].
-     * @param path Path relative to the router's base path
+     * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
     fun delete(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
         app.delete(path) {
-            req, res -> callback.invoke(express.Request(req), express.Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), Response(res))
         }
     }
 
     /**
      * Handles GET requests for [path].
-     * @param path Path relative to the router's base path
+     * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
     fun get(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
         app.get(path) {
-            req, res -> callback.invoke(express.Request(req), express.Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), Response(res))
         }
     }
 
@@ -80,39 +81,39 @@ class Application {
      */
     fun onRequest(callback: (request: ExpressRequest, response: Response, next: () -> Unit) -> Unit) {
         app.use {
-            req, res, n -> callback.invoke(express.Request(req), express.Response(res), n as () -> Unit)
+            req, res, n -> callback.invoke(ExpressRequest(req), Response(res), n as () -> Unit)
         }
     }
 
     /**
      * Handles POST requests for [path].
-     * @param path Path relative to the router's base path
+     * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
     fun post(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
         app.post(path) {
-            req, res -> callback.invoke(express.Request(req), express.Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), Response(res))
         }
     }
 
     /**
      * Handles PUT requests for [path].
-     * @param path Path relative to the router's base path
+     * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
     fun put(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
         app.put(path) {
-            req, res -> callback.invoke(express.Request(req), express.Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), Response(res))
         }
     }
 
     /**
-     * Uses [router] for [path].
-     * @param path Path relative to the router's base path
-     * @param router Instance of another router to use for [path]
+     * Uses [expressRouter] for [path].
+     * @param path Path relative to the expressRouter's base path
+     * @param expressRouter Instance of another expressRouter to use for [path]
      */
-    fun use(path: String, router: ExpressRouter) {
-        app.use(path, router.expressRouter)
+    fun use(path: String, expressRouter: ExpressRouter) {
+        app.use(path, expressRouter.expressRouter)
     }
 
     /**

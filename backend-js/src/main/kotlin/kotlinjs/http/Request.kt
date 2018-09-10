@@ -5,24 +5,22 @@ import org.w3c.fetch.*
 import kotlin.js.json
 
 /**
- * A fake constructor for a dynamic JS RequestInit object.
+ * A fake constructor for a dynamic JS Request object.
  * Primarily used in calls to [[org.w3c.fetch]]
  */
-data class Request(
-    val method: Method = Method.GET,
-    val headers: Map<String, String?>? = null,
-    val body: Any? = null,
-    val referrer: String? = null,
-    val referrerPolicy: dynamic = null,
-    val mode: RequestMode? = null,
-    val credentials: RequestCredentials? = null,
-    val cache: RequestCache? = null,
-    val redirect: RequestRedirect? = null,
-    val integrity: String? = null,
-    val keepalive: Boolean? = null,
-    val window: Any? = null)
-
-fun Request.toRequestInit(): RequestInit {
+fun Request(
+        method: Method = Method.GET,
+        headers: Map<String, String?>? = null,
+        body: Any? = null,
+        referrer: String? = null,
+        referrerPolicy: dynamic = null,
+        mode: RequestMode? = null,
+        credentials: RequestCredentials? = null,
+        cache: RequestCache? = null,
+        redirect: RequestRedirect? = null,
+        integrity: String? = null,
+        keepalive: Boolean? = null,
+        window: Any? = null): RequestInit {
 
     val o = js("({})")
 
