@@ -1,8 +1,7 @@
 package com.wadejensen.atlas.flatmates
 
-import com.wadejensen.atlas.flatmates.model.FlatmatesListing
-import com.wadejensen.atlas.flatmates.model.ListingType
-import com.wadejensen.atlas.flatmates.model.MapMarkersRequestBody
+import com.wadejensen.atlas.flatmates.model.*
+
 import com.wadejensen.atlas.model.Listing
 
 import kotlinx.serialization.json.JSON as Json
@@ -28,7 +27,7 @@ data class FlatmatesClient(
      * @param lon1 Longitude coord of bounding box
      * @param lat2 Latitude coord of bounding box
      * @param lon2 Longitude coord of bounding box
-     * @param listingType The kind of real estate listing eg. single room, whole property, team up.
+     * @param roomType The kind of real estate listing eg. single room, whole property, team up.
      *        See [[ListingType]] for all possible values.
      * @param minPrice Lowest rental cost to be returned
      * @param maxPrice Highest rental cost to be returned
@@ -38,7 +37,7 @@ data class FlatmatesClient(
         lon1: Double,
         lat2: Double,
         lon2: Double,
-        listingType: ListingType,
+        roomType: RoomType,
         minPrice: Double,
         maxPrice: Double): Try<Array<Listing>> {
 
@@ -48,9 +47,11 @@ data class FlatmatesClient(
             lon1,
             lat2,
             lon2,
-            listingType,
+            roomType,
             minPrice,
             maxPrice)
+
+        flatmatesListingsOrErr.map { flatmatesListing -> console.dir(flatmatesListing[0]) }
 
         return flatmatesListingsOrErr.map { flatmatesListings ->
             // if results are saturated then break the request down into several requests over a smaller area
@@ -64,7 +65,7 @@ data class FlatmatesClient(
                         lat = it.latitude,
                         lon = it.longitude,
                         price = it.rent.average(),
-                        listingType = listingType.value,
+                        listingType = roomType.value,
                         listingUrl = it.listing_link,
                         imageUrl = it.photo,
                         source = "flatmates",
@@ -101,7 +102,7 @@ data class FlatmatesClient(
         lon1: Double,
         lat2: Double,
         lon2: Double,
-        requestType: ListingType,
+        requestType: RoomType,
         minPrice: Double,
         maxPrice: Double): Try<Array<FlatmatesListing>> {
 
@@ -114,7 +115,16 @@ data class FlatmatesClient(
                 "Cookie" to this.sessionId,
                 "X-CSRF-Token" to this.sessionToken
             ),
-            body = MapMarkersRequestBody.create(lat1, lon1, lat2, lon2, requestType, minPrice, maxPrice)
+            body = MapMarkersRequestBody.create(
+                lat1 = lat1,
+                lon1 = lon1,
+                lat2 = lat2,
+                lon2 = lon2,
+                searchMode = SearchMode.NONE,
+                roomType = RoomType.PRIVATE_ROOM, // TODO paramterise
+                property_types = null,
+                minPrice = minPrice,
+                maxPrice = maxPrice)
         )
 
         return Try {
@@ -136,17 +146,43 @@ data class FlatmatesClient(
      * Perform an api call to get suburb location and POI autocomplete from flatmates.com.au.
      * POIs : suburb, city, university, tram_stop, train_station
      */
-    suspend fun autocomplete(userInput: String, baseUrl: String = this.baseUrl): Try<Array<String>> {
+    suspend fun autocomplete(userInput: String, url: String = "${this.baseUrl}/autocomplete"): Try<Array<String>> {
         // construct request body
-        val body = TODO()
+
+
+
+        val request = Request(
+            method = Method.POST,
+            headers = mapOf(
+                "Content-Type" to "application/json;charset=UTF-8",
+                "Accept" to "application/json",
+                "Accept-Encoding" to "gzip, deflate, br"),
+            body = AutocompleteRequestBody.create(userInput)
+        )
+
+        console.dir(request)
 
         // make request
 
+        println("autocomplete request")
         Try {
-            val resp = fetch("$baseUrl/autocomplete").await()
-            if ( resp.status !== 200.toShort() ) {
+            val resp = fetch(url, request).await()
+
+            //console.dir(resp)
+
+            if ( resp.status.toInt() != 200 ) {
+                println("woops")
                 throw RuntimeException("flatmates.com.au autocomplete API responded with status code: ${resp.status}")
             }
+            val data = resp.json().await()
+
+            val suggestions = JSON.parse<AutocompleteResponse>(JSON.stringify(data.asDynamic())) //.suggest.location_suggest[0]
+
+            console.dir(suggestions)
+            println(suggestions)
+            console.dir(suggestions._shards.failed)
+            console.dir(suggestions.suggest.location_suggest[0].options[0])
+
         }
 
 
@@ -201,7 +237,7 @@ data class FlatmatesClient(
             return Try {
                 val resp: Response = fetch(url).await()
 
-                if (resp.status != 200.toShort()) {
+                if (resp.status.toInt() != 200) {
                     throw RuntimeException("Invalid flatmates homepage response code: ${resp.status}")
                 }
 

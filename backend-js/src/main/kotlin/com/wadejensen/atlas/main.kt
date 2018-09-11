@@ -1,7 +1,7 @@
 package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
-import com.wadejensen.atlas.flatmates.model.ListingType
+import com.wadejensen.atlas.flatmates.model.RoomType
 import com.wadejensen.atlas.handlers.*
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
@@ -47,7 +47,7 @@ fun start() {
             lon1 = 151.16001704415282,
             lat2 = -33.90481527152859,
             lon2 = 151.2626705475708,
-            listingType = ListingType.ROOMS,
+            roomType = RoomType.PRIVATE_ROOM,
             minPrice = 100.0,
             maxPrice = 2000.0)
 
@@ -55,6 +55,8 @@ fun start() {
         console.dir(listingsOrErr.success().size)
         println(listingsOrErr.success()[0].price)
         console.dir(listingsOrErr.success()[0])
+
+        flatmatesClient.autocomplete("redfern")
     }
 }
 
