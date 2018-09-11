@@ -133,12 +133,11 @@ data class FlatmatesClient(
             if (resp.status != 200.toShort()) {
                 throw RuntimeException("flatmates.com.au mapMarkersApi responded with status code: ${resp.status}")
             }
-
             val data = resp.json().await()
 
-            // parse risky data from JSON into safe typed object
-            val matches = JSON.stringify(data.asDynamic().matches)
-            JSON.parse<Array<FlatmatesListing>>(matches)
+            // parse into typed objects
+            val mapMarkers = JSON.parse<MapMarkersResponseBody>(JSON.stringify(data))
+            mapMarkers.matches
         }
     }
 
