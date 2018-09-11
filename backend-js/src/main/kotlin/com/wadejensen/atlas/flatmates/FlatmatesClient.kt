@@ -1,51 +1,109 @@
 package com.wadejensen.atlas.flatmates
 
+import com.wadejensen.atlas.flatmates.model.FlatmatesListing
+import com.wadejensen.atlas.flatmates.model.ListingType
+import com.wadejensen.atlas.flatmates.model.MapMarkersRequestBody
+import com.wadejensen.atlas.model.Listing
+
+import kotlinx.serialization.json.JSON as Json
+
 import express.http.Method
 import org.w3c.fetch.Response
-//import kotlinjs.await
 import kotlinjs.http.Request
 import kotlinjs.http.fetch
-import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.await
-import kotlinx.coroutines.experimental.delay
-//import kotlinjs.tryAwait
 import org.funktionale.Try
-import kotlin.js.json
-import kotlin.math.max
-import kotlin.math.min
 
-data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
+
+data class FlatmatesClient(
+    val sessionId: String,
+    val sessionToken: String,
+    val baseUrl: String) {
+
+    /**
+     * Asyncronously query flatmates.com.au for real estate listings within a geographic bounding box,
+     * filtered by listing type, and price. Handles parsing and translation of raw listing format.
+     *
+     * @param lat1 Latitude coord of bounding box
+     * @param lon1 Longitude coord of bounding box
+     * @param lat2 Latitude coord of bounding box
+     * @param lon2 Longitude coord of bounding box
+     * @param listingType The kind of real estate listing eg. single room, whole property, team up.
+     *        See [[ListingType]] for all possible values.
+     * @param minPrice Lowest rental cost to be returned
+     * @param maxPrice Highest rental cost to be returned
+     */
     suspend fun getListings(
         lat1: Double,
         lon1: Double,
         lat2: Double,
         lon2: Double,
-        requestType: RequestType,
+        listingType: ListingType,
         minPrice: Double,
-        maxPrice: Double): Try<List<Listing>> {
-
+        maxPrice: Double): Try<Array<Listing>> {
 
         // make API request
+        val flatmatesListingsOrErr: Try<Array<FlatmatesListing>> = mapMarkersApi(
+            lat1,
+            lon1,
+            lat2,
+            lon2,
+            listingType,
+            minPrice,
+            maxPrice)
 
-        // if results are saturated then break the request down
-
-        // transform result into cannonical listing
-
-        // ret result
-
-        return TODO()
+        return flatmatesListingsOrErr.map { flatmatesListings ->
+            // if results are saturated then break the request down into several requests over a smaller area
+            if (flatmatesListings.size >= 1001) {
+                TODO()
+            }
+            else {
+                flatmatesListings.map {
+                    Listing(
+                        id = it.id.toString(),
+                        lat = it.latitude,
+                        lon = it.longitude,
+                        price = it.rent.average(),
+                        listingType = listingType.value,
+                        listingUrl = it.listing_link,
+                        imageUrl = it.photo,
+                        source = "flatmates",
+                        title = it.head,
+                        subheading = it.subheading,
+                        address = null,
+                        bedrooms = null,
+                        bathrooms = null,
+                        carspaces = null)
+                }.toTypedArray()
+            }
+        }
     }
 
-    suspend fun mapMarkersApi(
+    /**
+     *
+     */
+
+    /**
+     * Raw asyncronous API call for getting pins on a map from flatmates.com.au of all real estate listings within a
+     * geographic bounding box, filtered by listing type, and price.
+     *
+     * @param lat1 Latitude coord of bounding box
+     * @param lon1 Longitude coord of bounding box
+     * @param lat2 Latitude coord of bounding box
+     * @param lon2 Longitude coord of bounding box
+     * @param requestType The kind of real estate listing eg. single room, whole property, team up.
+     *        See [[ListingType]] for all possible values.
+     * @param minPrice Lowest rental cost to be returned
+     * @param maxPrice Highest rental cost to be returned
+     */
+    private suspend fun mapMarkersApi(
         lat1: Double,
         lon1: Double,
         lat2: Double,
         lon2: Double,
-        requestType: RequestType,
+        requestType: ListingType,
         minPrice: Double,
-        maxPrice: Double): Try<List<FlatmatesListing>> {
-
-        println("Creating request")
+        maxPrice: Double): Try<Array<FlatmatesListing>> {
 
         // construct request body
         val request = Request(
@@ -56,40 +114,86 @@ data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
                 "Cookie" to this.sessionId,
                 "X-CSRF-Token" to this.sessionToken
             ),
-            body = GetMapMarkersRequestBody(lat1, lon1, lat2, lon2, requestType, minPrice, maxPrice)
+            body = MapMarkersRequestBody.create(lat1, lon1, lat2, lon2, requestType, minPrice, maxPrice)
         )
 
-        // make request
-        val resp= fetch("https://flatmates.com.au/map_markers", request).await()
-        val data = resp.json().await()
+        return Try {
+            // make request
+            val resp= fetch("$baseUrl/map_markers", request).await()
+            if (resp.status != 200.toShort()) {
+                throw RuntimeException("Invalid mapMarkersApi response code: ${resp.status}")
+            }
 
-//        data?.let {
-//            console.dir(data)
-//        }
+            val data = resp.json().await()
 
-        // parse data and handle errors
-        return Try { listOf(Any()) }
+            // parse risky data from JSON into safe typed object
+            val matches = JSON.stringify(data.asDynamic().matches)
+            JSON.parse<Array<FlatmatesListing>>(matches)
+        }
     }
 
+    /**
+     * Perform an api call to get suburb location and POI autocomplete from flatmates.com.au.
+     * POIs : suburb, city, university, tram_stop, train_station
+     */
+    suspend fun autocomplete(userInput: String, baseUrl: String = this.baseUrl): Try<Array<String>> {
+        return TODO()
+    }
+
+//    /**
+//     * Perform an api call to get suburb location and POI autocomplete from flatmates.com.au.
+//     * POIs : suburb, city, university, tram_stop, train_station
+//     */
+//    static async Autocomplete(userInput: String) {
+//        const url = 'https://flatmates.com.au/autocomplete'
+//
+//        const reqBody: any = {
+//            "location_suggest":{
+//                "text": userInput,
+//                "completion":{
+//                    "field":"suggest",
+//                    "size": 5,
+//                    "fuzzy":{"fuzziness":"AUTO"},
+//                    "contexts": {
+//                        "location_type":["suburb","city","university","tram_stop","train_station"]
+//                    }
+//                }
+//            }
+//        }
+//
+//        let resp = await FlatmatesClient.httpPost(url, reqBody)
+//        if ( resp.status !== 200 ) {
+//            throw Error('flatmates.com.au autocomplete API responded with HTTP code: ' + resp.status)
+//        }
+//        const suggestionJson = await resp.json()
+//        // Black magic indexing into JSON response
+//        const suggestions = suggestionJson.suggest.location_suggest[0].options
+//        return suggestions.map( (poi: any) =>
+//        new FlatmatesAutocompletePoi( poi.text, poi._source.search_title, poi._source.short_title,
+//        poi._source.latitude, poi._source.longitude ) )
+//    }
+
     companion object {
+
+        const val baseUrl: String = "https://flatmates.com.au"
 
         /**
          * Asyncronous constructor of a [[FlatmatesClient]].
          * @param url The base url of Flatmates.com.au
          * @returns A FlatmatesClient if [[Success]]ful or a wrapped Throwable value if [[Failure]]
          */
-        suspend fun create(url: String = "https://flatmates.com.au"): Try<FlatmatesClient> {
+        suspend fun create(url: String = baseUrl): Try<FlatmatesClient> {
             return Try {
-                async {
-                    println("Before fetch create")
-                    val response: Response = fetch(url).await()
-                    //println("After fetch create")
-                    //console.dir(response)
-                    val sessionId = parseSessionId(response).get()
-                    val sessionToken = parseSessionToken(response).get()
+                val resp: Response = fetch(url).await()
 
-                    FlatmatesClient(sessionId, sessionToken)
-                }.await()
+                if (resp.status != 200.toShort()) {
+                    throw RuntimeException("Invalid flatmates homepage response code: ${resp.status}")
+                }
+
+                val sessionId = parseSessionId(resp).get()
+                val sessionToken = parseSessionToken(resp).get()
+
+                FlatmatesClient(sessionId, sessionToken, url)
             }
         }
 
@@ -108,24 +212,17 @@ data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
             return Try {
                 val cookie: String? = resp.headers.get("set-cookie")
 
-                println("the cookie=" + cookie)
-                println("Match=" + cookie?.match("_flatmates_session=[a-zA-Z0-9]+"))
-
                 // perform risky parsing of cookie in response header
-                val sessionId = cookie
-                    ?.match("_flatmates_session=[a-zA-Z0-9]+")
-                    ?.get(0)
+                val sessionIdMatches = cookie
+                    ?.match("_flatmates_session=[a-zA-Z0-9]+")!!
 
-                if (sessionId == null) {
-                    println("session id match failed")
-                }
-                else {
-                    println("session id match succeeded")
+                // Ensure a match exists
+                if (sessionIdMatches.isEmpty()) {
+                    throw NoSuchElementException("Could not parse ")
                 }
 
-                println("DE WEEEEEEEE EVER GET HERE???")
-
-                sessionId!!
+                // We expect only one match
+                sessionIdMatches[0]
             }
         }
 
@@ -137,94 +234,24 @@ data class FlatmatesClient(val sessionId: String, val sessionToken: String) {
         suspend fun parseSessionToken(resp: Response): Try<String> {
             return Try {
                 val html = resp.text().await()
-                //println(html)
-
-                println()
-                println("html match")
-                println("")
-                //console.dir(html.match(".*csrf-token.*")!!.count())
-
                 val csrfTokenDiv = html
                     .match(".*csrf-token.*")
                     ?.get(0)
 
                 if (csrfTokenDiv == null) {
-                    println("csrfTokenDiv:" + csrfTokenDiv + "was null")
-                }
-                else {
-                    println("token div was not null")
+                    throw NoSuchElementException("Could not find pattern '.*csrf-token.*' in flatmates html response.")
                 }
 
-                //println("Num matches=")
-                //println(csrfTokenDiv?.match("\"[a-zA-Z0-9|=|+]+\"")?.count())
+                val tokenMatches = csrfTokenDiv
+                    .match("\"[a-zA-Z0-9|=|+|\\/]+\"")!!
 
-                val potentialMatch = csrfTokenDiv
-                    ?.match("\"[a-zA-Z0-9|=|+|\\/]+\"")
-
-                if (potentialMatch == null) {
-                    println("potential matches empty")
-                    println(csrfTokenDiv)
+                // Ensure a match exists
+                if (tokenMatches.isEmpty()) {
                     throw NoSuchElementException("Token regex pattern did not match div $csrfTokenDiv")
                 }
-                else {
-                    println("potential matches exist")
-                }
-
-                //potentialMatch ?: throw NoSuchElementException("Token regex pattern did not match div $csrfTokenDiv")
-
-                val token = csrfTokenDiv
-                    ?.match("\"[a-zA-Z0-9|=|+|\\/]+\"")
-                    ?.get(0)
-                    ?.replace("\"", "")
-
-                println("DIIIIIIIIIID WE EVER GET HERE???")
-
-                token!!
+                // We expect only one match
+                tokenMatches[0].replace("\"", "")
             }
         }
     }
-}
-
-/**
- * Enum type for HTTP methods.
- */
-enum class RequestType(val value: String) {
-    ROOMS("rooms"),
-    POST("POST"),
-    PUT("PUT"),
-    DELETE("DELETE"),
-}
-
-typealias FlatmatesListing = Any
-typealias Listing = Any
-
-typealias GetMapMarkersRequestBody = Any
-
-fun GetMapMarkersRequestBody(
-    lat1: Double,
-    lon1: Double,
-    lat2: Double,
-    lon2: Double,
-    requestType: RequestType,
-    minPrice: Double,
-    maxPrice: Double): dynamic {
-
-    val latMin = min(lat1, lat2)
-    val lonMin = min(lon1, lon2)
-    val latMax = max(lat1, lat2)
-    val lonMax = max(lon1, lon2)
-
-    val body = js("({})")
-
-    val search  = js("({})")
-    search["mode"]       = requestType.value
-    search["min_budget"] = minPrice
-    search["max_budget"] = maxPrice
-    // A seemingly Australia-centric API
-    search["top_left"]     = "${latMax}, ${lonMin}"
-    search["bottom_right"] = "${latMin}, ${lonMax}"
-
-    body["search"] = search
-
-    return body
 }

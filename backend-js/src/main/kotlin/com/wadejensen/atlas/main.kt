@@ -1,7 +1,7 @@
 package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
-import com.wadejensen.atlas.flatmates.RequestType
+import com.wadejensen.atlas.flatmates.model.ListingType
 import com.wadejensen.atlas.model.Person
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
@@ -13,13 +13,9 @@ import kotlinjs.http.fetch
 import kotlinjs.require
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.await
-import kotlinx.coroutines.experimental.launch
+import org.funktionale.*
 import org.w3c.fetch.Response
 import kotlin.js.Promise
-import org.funktionale.Try
-import org.funktionale.failure
-import org.funktionale.isSuccess
-import org.funktionale.success
 import kotlinx.serialization.json.JSON as Json
 
 external val process: dynamic
@@ -54,17 +50,18 @@ fun start() {
 
         console.dir(flatmatesClient)
 
-        val listings = flatmatesClient.mapMarkersApi(
+        val listingsOrErr = flatmatesClient.getListings(
             lat1 = -33.878453691548835,
             lon1 = 151.16001704415282,
             lat2 = -33.90481527152859,
             lon2 = 151.2626705475708,
-            requestType = RequestType.ROOMS,
+            listingType = ListingType.ROOMS,
             minPrice = 100.0,
             maxPrice = 2000.0)
 
         println("Num listings found")
-        console.dir(listings.success().size)
+        console.dir(listingsOrErr.success().size)
+        println(listingsOrErr.success()[0].price)
 
         setupRoutes(app, shared, flatmatesClient)
 
@@ -85,11 +82,19 @@ fun start() {
 }
 
 suspend fun initApiClients(): Pair<FlatmatesClient, String> {
-    println("start init api clients")
+    println("Initialising API clients")
 
+    println("Initialising flatmates.com.au.")
     val flatmatesClientOrErr: Try<FlatmatesClient> = FlatmatesClient.create()
+    if (flatmatesClientOrErr.isFailure()) {
+        println("""| Failed to create flatmates.com.au API client for reason:
+                   | ${flatmatesClientOrErr.failure().message}
+                   | cause:
+                   | ${flatmatesClientOrErr.failure().cause}"""
+            .trimMargin())
+    }
 
-    println("created client")
+    println("Created flatmates.com.au client")
     println(flatmatesClientOrErr)
 
     if (flatmatesClientOrErr.isSuccess()) {
@@ -101,7 +106,8 @@ suspend fun initApiClients(): Pair<FlatmatesClient, String> {
         println("Could not contact flatmates.com.au API")
         println(flatmatesClientOrErr.failure())
         println(flatmatesClientOrErr.failure().cause)
-        //process.exit(1)
+
+        process.exit(1)
 
         // We will never get here
         throw Exception("Could not contact flatmates.com.au API", flatmatesClientOrErr.failure())
