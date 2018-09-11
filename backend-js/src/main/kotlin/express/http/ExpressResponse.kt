@@ -8,12 +8,12 @@ package express.http
 import express.JSONUtils
 
 /**
- * HTTP Response class.
+ * HTTP ExpressResponse class.
  *
  * Encapsulates HTTP responses as used within [Router] callbacks.
- * @constructor Creates a new Response based on an expressjs response.
+ * @constructor Creates a new ExpressResponse based on an expressjs response.
  */
-class Response(external private val res: dynamic) {
+class ExpressResponse(external private val res: dynamic) {
 
     /**
      * Ends response.

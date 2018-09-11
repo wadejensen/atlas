@@ -121,7 +121,7 @@ data class FlatmatesClient(
             // make request
             val resp= fetch("$baseUrl/map_markers", request).await()
             if (resp.status != 200.toShort()) {
-                throw RuntimeException("Invalid mapMarkersApi response code: ${resp.status}")
+                throw RuntimeException("flatmates.com.au mapMarkersApi responded with status code: ${resp.status}")
             }
 
             val data = resp.json().await()
@@ -137,6 +137,21 @@ data class FlatmatesClient(
      * POIs : suburb, city, university, tram_stop, train_station
      */
     suspend fun autocomplete(userInput: String, baseUrl: String = this.baseUrl): Try<Array<String>> {
+        // construct request body
+        val body = TODO()
+
+        // make request
+
+        Try {
+            val resp = fetch("$baseUrl/autocomplete").await()
+            if ( resp.status !== 200.toShort() ) {
+                throw RuntimeException("flatmates.com.au autocomplete API responded with status code: ${resp.status}")
+            }
+        }
+
+
+        // Black magic indexing into JSON response
+
         return TODO()
     }
 

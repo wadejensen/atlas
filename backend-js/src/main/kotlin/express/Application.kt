@@ -6,7 +6,7 @@
 package express
 
 import express.http.ExpressRequest
-import express.http.Response
+import express.http.ExpressResponse
 import kotlinjs.require
 
 external val process: dynamic
@@ -47,9 +47,9 @@ class Application {
      * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
-    fun all(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
+    fun all(path: String, callback: (request: ExpressRequest, response: ExpressResponse) -> Unit) {
         app.all(path) {
-            req, res -> callback.invoke(ExpressRequest(req), Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), ExpressResponse(res))
         }
     }
 
@@ -58,9 +58,9 @@ class Application {
      * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
-    fun delete(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
+    fun delete(path: String, callback: (request: ExpressRequest, response: ExpressResponse) -> Unit) {
         app.delete(path) {
-            req, res -> callback.invoke(ExpressRequest(req), Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), ExpressResponse(res))
         }
     }
 
@@ -69,9 +69,9 @@ class Application {
      * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
-    fun get(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
+    fun get(path: String, callback: (request: ExpressRequest, response: ExpressResponse) -> Unit) {
         app.get(path) {
-            req, res -> callback.invoke(ExpressRequest(req), Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), ExpressResponse(res))
         }
     }
 
@@ -79,9 +79,9 @@ class Application {
      * Registers a global request [callback].
      * @param callback Callback to handle requests
      */
-    fun onRequest(callback: (request: ExpressRequest, response: Response, next: () -> Unit) -> Unit) {
+    fun onRequest(callback: (request: ExpressRequest, response: ExpressResponse, next: () -> Unit) -> Unit) {
         app.use {
-            req, res, n -> callback.invoke(ExpressRequest(req), Response(res), n as () -> Unit)
+            req, res, n -> callback.invoke(ExpressRequest(req), ExpressResponse(res), n as () -> Unit)
         }
     }
 
@@ -90,9 +90,9 @@ class Application {
      * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
-    fun post(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
+    fun post(path: String, callback: (request: ExpressRequest, response: ExpressResponse) -> Unit) {
         app.post(path) {
-            req, res -> callback.invoke(ExpressRequest(req), Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), ExpressResponse(res))
         }
     }
 
@@ -101,9 +101,9 @@ class Application {
      * @param path Path relative to the expressRouter's base path
      * @param callback Callback to handle requests
      */
-    fun put(path: String, callback: (request: ExpressRequest, response: Response) -> Unit) {
+    fun put(path: String, callback: (request: ExpressRequest, response: ExpressResponse) -> Unit) {
         app.put(path) {
-            req, res -> callback.invoke(ExpressRequest(req), Response(res))
+            req, res -> callback.invoke(ExpressRequest(req), ExpressResponse(res))
         }
     }
 

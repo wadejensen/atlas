@@ -17,10 +17,15 @@ import org.funktionale.*
 import org.w3c.fetch.Response
 import kotlin.js.Promise
 import kotlinx.serialization.json.JSON as Json
+import com.wadejensen.atlas.handlers.*
+import express.http.ExpressRequest
+import express.http.ExpressResponse
 
 external val process: dynamic
 external val __dirname: dynamic
 
+const val staticResourcesPath = "../../frontend-js/src/main/web"
+const val defaultPort = 3000
 /**
  * main function for JavaScript
  */
@@ -29,27 +34,21 @@ fun main(vararg args: String) {
 }
 
 /**
- * We start this function from app.js"
+ * We start this function from atlas.js"
  */
 fun start() {
-
+    // Create Node.js Express app
     val app = Application()
-    val shared = SharedClass(Console(), Math())
 
+    // Show off that I can share code between client and server
+    val shared = SharedClass(Console(), Math())
     println(shared.givePrimes(2))
 
-    val x = async {
-        println("Start async")
-        val resp: Response = fetch("https://jsonplaceholder.typicode.com/todos/1").await()
-        val data: Any? = resp.json().await()
-        console.dir(data!!)
+    async {
+        val flatmatesClient = setupAtlas(app, shared)
+        println("Kotlin - Node.js webserver ready.")
 
-        // Initial unsafe calls to authorise with provider APIs
-        // Will throw exceptions and cause node process to exit in failure case
-        val (flatmatesClient, nextClient) = initApiClients()
-
-        console.dir(flatmatesClient)
-
+        // cutting edge
         val listingsOrErr = flatmatesClient.getListings(
             lat1 = -33.878453691548835,
             lon1 = 151.16001704415282,
@@ -62,152 +61,66 @@ fun start() {
         println("Num listings found")
         console.dir(listingsOrErr.success().size)
         println(listingsOrErr.success()[0].price)
-
-        setupRoutes(app, shared, flatmatesClient)
-
-        println(shared.givePrimes(4))
-
-        println("All routes setup.")
-
-        app.startHttpServer(3000)
-        println("HTTP server started.")
-
-        val path = require("path")
-        val staticWebContentPath = path.join(__dirname, "../../frontend-js/src/main/web") as String
-        println("Serving content from: $staticWebContentPath")
-        app.serveStaticContent(staticWebContentPath)
-
-        println("Kotlin - Node.js webserver ready.")
+        console.dir(listingsOrErr.success()[0])
     }
 }
 
-suspend fun initApiClients(): Pair<FlatmatesClient, String> {
-    println("Initialising API clients")
+suspend fun setupAtlas(app: Application, shared: SharedClass): FlatmatesClient {
+    println("Initialising API clients...")
+    val (flatmatesClient, nextClient) = initApiClients()
+    println("API clients' initialisation successful.")
 
-    println("Initialising flatmates.com.au.")
-    val flatmatesClientOrErr: Try<FlatmatesClient> = FlatmatesClient.create()
-    if (flatmatesClientOrErr.isFailure()) {
-        println("""| Failed to create flatmates.com.au API client for reason:
-                   | ${flatmatesClientOrErr.failure().message}
-                   | cause:
-                   | ${flatmatesClientOrErr.failure().cause}"""
-            .trimMargin())
-    }
+    println("Configuring express middleware router...")
+    setupRoutes(app, shared, flatmatesClient)
+    println("Express middleware configuration successful.")
 
-    println("Created flatmates.com.au client")
-    println(flatmatesClientOrErr)
+    println("Starting HTTP server")
+    startHttpServer(app)
+    println("HTTP server launched")
 
-    if (flatmatesClientOrErr.isSuccess()) {
-        val flatmatesClient = flatmatesClientOrErr.success()
-        println(flatmatesClient)
-        return Pair(flatmatesClient, "Other clientelle")
-    }
-    else {
-        println("Could not contact flatmates.com.au API")
-        println(flatmatesClientOrErr.failure())
-        println(flatmatesClientOrErr.failure().cause)
-
-        process.exit(1)
-
-        // We will never get here
-        throw Exception("Could not contact flatmates.com.au API", flatmatesClientOrErr.failure())
-    }
+    return flatmatesClient
 }
 
 fun setupRoutes(app: Application, shared: SharedClass, flatmatesClient: FlatmatesClient): Unit {
+    app.get("/primes") { req, res -> printPlatformSpecificPrimes(req, res, shared) }
+    app.get("/async-get") { req, res -> asyncHttpGet(req, res) }
+    app.get("/async-post") { req: ExpressRequest, res: ExpressResponse -> asyncHttpPost(req, res) }
+    app.get("/parse-json") { req: ExpressRequest, res: ExpressResponse -> parseJson(req, res) }
+    app.get("/promise-get") { req, res -> httpGetPromise(req, res) }
+}
 
-    app.get("/primes") { _, _ ->
-        shared.platform = "Node.js"
-        shared.printMe()
-        println(shared.givePrimes(100))
+fun startHttpServer(app: Application): Unit {
+    // Attempt risky parsing of port environment variable
+    val portOrErr = Try { process.env.PORT.toString().toInt() }
+
+    val port = if (portOrErr.isSuccess()) {
+        println("Using provided port: ${portOrErr.success()} from environment variable.")
+        portOrErr.success()
+    }
+    else {
+        defaultPort
     }
 
-    /**
-     *  Express route handler listening on `https://hostname:port/async-get`.
-     *  Makes a simple HTTP GET request asyncronously using the w3c window.fetch API.
-     *  Uses a Kotlin coroutine wrapper around native JS `Promise`s, to mimic the ES7 async - await pattern.
-     */
-    app.get("/async-get") { _, res ->
-        println("async-get route pinged")
+    app.startHttpServer(port)
 
-        async {
-            val resp: Response = fetch("https://jsonplaceholder.typicode.com/todos/1").await()
-            val data: Any? = resp.json().await()
+    val path = require("path")
+    val staticWebContentPath = path.join(__dirname, staticResourcesPath) as String
+    println("Serving content from: $staticWebContentPath")
+    app.serveStaticContent(staticWebContentPath)
+}
 
-            data?.also {
-                console.dir(data)
-                res.send(JSON.stringify(data))
-            }
-        }
+suspend fun initApiClients(): Pair<FlatmatesClient, String> {
+    println("Initialising flatmates.com.au.")
+    val flatmatesClientOrErr: Try<FlatmatesClient> = FlatmatesClient.create()
+
+    if (flatmatesClientOrErr.isFailure()) {
+        throw RuntimeException("""| Failed to create flatmates.com.au API client for reason:
+                   | ${flatmatesClientOrErr.failure().message}
+                   | cause:
+                   | ${flatmatesClientOrErr.failure().cause}""".trimMargin())
     }
+    println("Created flatmates.com.au client")
+    println(flatmatesClientOrErr)
 
-    /**
-     *  Express route handler listening on `https://hostname:port/async-post`.
-     *  Makes a HTTP POST request asyncronously using the w3c window.fetch API.
-     *  The fetch API is called from a typed wrapper which accepts Kotlin data class objects
-     *  as the message body, a Map<String, String> for the headers, and an enum for the request type.
-     *  Uses a Kotlin coroutine wrapper around native JS `Promise`s, to mimic the ES7 async - await pattern.
-     */
-    app.get("/async-post") { _, res ->
-        println("async-post route pinged")
-
-        val wade = "{\"name\":\"Wade Jensen\", \"age\": 22, \"address\": {\"streetNum\": 123, \"streetName\": \"Fake street\", \"suburb\": \"Surry Hills\", \"postcode\": 2010}}"
-        val person = JSON.parse<Person>(wade)
-        async {
-            val request = Request(
-                method  = Method.POST,
-                headers = mapOf("username" to "wjensen", "password" to "1234567"),
-                body    = person)
-
-            println("ExpressRequest object:")
-            console.dir(request)
-
-            val resp = fetch("https://jsonplaceholder.typicode.com/posts", request).await()
-            val data: Any? = resp.json().await()
-            data?.also {
-                println("Response object:")
-                console.dir(data)
-                res.send(JSON.stringify(data))
-            }
-        }
-    }
-
-    /** Express route handler listening on `https://hostname:port/parse-json`.
-     *  Parses a JSON string into a Kotlin object (POJO) and then accesses fields in a type-safe way, sending the result
-     *  in a text format back to the browser of the requester.
-     */
-    app.get("/parse-json") { _, res ->
-        println("parse-json route pinged")
-
-        val data = "{\"name\":\"Wade Jensen\", \"age\": 22, \"address\": {\"streetNum\": 123, \"streetName\": \"Fake street\", \"suburb\": \"Surry Hills\", \"postcode\": 2010}}"
-        println(data)
-        val person: Person = JSON.parse<Person>(data)
-        res.send("""
-            name    = ${person.name},
-            age     = ${person.age},
-
-            address.streetNum  = ${person.address.streetNum},
-            address.streetName = ${person.address.streetName},
-            address.suburb     = ${person.address.suburb},
-            address.postcode   = ${person.address.postcode}
-        """.trimIndent())
-    }
-
-    /**
-     * Express route handler listening on `https://hostname:port/promise-get`.
-     * Makes a simple HTTP GET request asyncronously using the w3c window.fetch API.
-     * Handle the result using native JS `Promise`s, then send the result as a webpage response.
-     */
-    app.get("/promise-get") { _, res ->
-        println("promise-get route pinged!")
-
-        val resp: Promise<Response> = fetch("https://jsonplaceholder.typicode.com/todos/1")
-        resp
-            .then { result: Response -> result.json() as Any }
-            .then { json -> JSON.stringify(json) }
-            .then { strResult ->
-                println(strResult)
-                res.send(strResult)
-            }
-    }
+    return Pair(flatmatesClientOrErr.success(), "Next client")
 }
