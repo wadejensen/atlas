@@ -1,9 +1,7 @@
 package kotlinjs.http
 
-import kotlinx.coroutines.experimental.await
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
-import kotlin.coroutines.experimental.suspendCoroutine
 import kotlin.js.Promise
 
 fun fetch(input: dynamic): Promise<Response> {

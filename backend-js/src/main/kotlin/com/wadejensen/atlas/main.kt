@@ -2,24 +2,17 @@ package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
 import com.wadejensen.atlas.flatmates.model.ListingType
-import com.wadejensen.atlas.model.Person
+import com.wadejensen.atlas.handlers.*
 import com.wadejensen.example.Console
 import com.wadejensen.example.Math
 import com.wadejensen.example.SharedClass
 import express.Application
-import express.http.Method
-import kotlinjs.http.Request
-import kotlinjs.http.fetch
-import kotlinjs.require
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.await
-import org.funktionale.*
-import org.w3c.fetch.Response
-import kotlin.js.Promise
-import kotlinx.serialization.json.JSON as Json
-import com.wadejensen.atlas.handlers.*
 import express.http.ExpressRequest
 import express.http.ExpressResponse
+import kotlinjs.require
+import kotlinx.coroutines.experimental.async
+import org.funktionale.*
+import kotlinx.serialization.json.JSON as Json
 
 external val process: dynamic
 external val __dirname: dynamic
