@@ -56,7 +56,8 @@ fun start() {
         println(listingsOrErr.success()[0].price)
         console.dir(listingsOrErr.success()[0])
 
-        flatmatesClient.autocomplete("redfern")
+        val suggestions = flatmatesClient.autocomplete("redfern")
+        console.dir(suggestions)
     }
 }
 

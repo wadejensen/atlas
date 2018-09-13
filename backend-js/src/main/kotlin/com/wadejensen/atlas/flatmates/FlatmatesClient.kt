@@ -80,9 +80,6 @@ data class FlatmatesClient(
         }
     }
 
-    /**
-     *
-     */
 
     /**
      * Raw asyncronous API call for getting pins on a map from flatmates.com.au of all real estate listings within a
@@ -145,11 +142,11 @@ data class FlatmatesClient(
      * Perform an api call to get suburb location and POI autocomplete from flatmates.com.au.
      * POIs : suburb, city, university, tram_stop, train_station
      */
-    suspend fun autocomplete(userInput: String, url: String = "${this.baseUrl}/autocomplete"): Try<Array<String>> {
+    suspend fun autocomplete(
+        userInput: String,
+        url: String = "${this.baseUrl}/autocomplete"): Try<Array<AutocompleteSuggestion>> {
+
         // construct request body
-
-
-
         val request = Request(
             method = Method.POST,
             headers = mapOf(
@@ -159,69 +156,41 @@ data class FlatmatesClient(
             body = AutocompleteRequestBody.create(userInput)
         )
 
-        console.dir(request)
-
         // make request
-
-        println("autocomplete request")
-        Try {
+        return Try {
             val resp = fetch(url, request).await()
-
-            //console.dir(resp)
-
             if ( resp.status.toInt() != 200 ) {
-                println("woops")
                 throw RuntimeException("flatmates.com.au autocomplete API responded with status code: ${resp.status}")
             }
             val data = resp.json().await()
 
-            val suggestions = JSON.parse<AutocompleteResponse>(JSON.stringify(data.asDynamic())) //.suggest.location_suggest[0]
+            // Parse response into typed object
+            val suggestionsBlob: AutocompleteResponse = JSON.parse<AutocompleteResponse>(JSON.stringify(data))
 
-            console.dir(suggestions)
-            println(suggestions)
-            console.dir(suggestions._shards.failed)
-            console.dir(suggestions.suggest.location_suggest[0].options[0])
+            // Black magic indexing into JSON response
+            val suggestions = suggestionsBlob
+                .suggest
+                .location_suggest[0]
+                .options
+                .map { it._source }
 
+            // Remove extraneous information
+            suggestions.map {
+                AutocompleteSuggestion(
+                    state = it.state,
+                    city = it.city,
+                    postcode = it.postcode,
+                    suburb = it.suburb,
+                    country = it.country,
+                    latitude = it.latitude,
+                    longitude = it.longitude,
+                    location_type = it.location_type,
+                    radius = it.radius,
+                    search_title = it.search_title,
+                    short_title = it.short_title)
+            }.toTypedArray()
         }
-
-
-        // Black magic indexing into JSON response
-
-        return TODO()
     }
-
-//    /**
-//     * Perform an api call to get suburb location and POI autocomplete from flatmates.com.au.
-//     * POIs : suburb, city, university, tram_stop, train_station
-//     */
-//    static async Autocomplete(userInput: String) {
-//        const url = 'https://flatmates.com.au/autocomplete'
-//
-//        const reqBody: any = {
-//            "location_suggest":{
-//                "text": userInput,
-//                "completion":{
-//                    "field":"suggest",
-//                    "size": 5,
-//                    "fuzzy":{"fuzziness":"AUTO"},
-//                    "contexts": {
-//                        "location_type":["suburb","city","university","tram_stop","train_station"]
-//                    }
-//                }
-//            }
-//        }
-//
-//        let resp = await FlatmatesClient.httpPost(url, reqBody)
-//        if ( resp.status !== 200 ) {
-//            throw Error('flatmates.com.au autocomplete API responded with HTTP code: ' + resp.status)
-//        }
-//        const suggestionJson = await resp.json()
-//        // Black magic indexing into JSON response
-//        const suggestions = suggestionJson.suggest.location_suggest[0].options
-//        return suggestions.map( (poi: any) =>
-//        new FlatmatesAutocompletePoi( poi.text, poi._source.search_title, poi._source.short_title,
-//        poi._source.latitude, poi._source.longitude ) )
-//    }
 
     companion object {
 
