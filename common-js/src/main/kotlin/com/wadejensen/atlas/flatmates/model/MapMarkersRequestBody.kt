@@ -3,7 +3,6 @@ package com.wadejensen.atlas.flatmates.model
 import kotlin.math.max
 import kotlin.math.min
 
-
 data class MapMarkersRequestBody(val search: Search) {
     companion object {
         fun create(

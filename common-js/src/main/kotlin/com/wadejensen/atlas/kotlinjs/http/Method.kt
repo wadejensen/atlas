@@ -3,7 +3,7 @@
  * https://github.com/blazer82/pappel-framework
  */
 
-package express.http
+package com.wadejensen.atlas.kotlinjs.http
 
 /**
  * Enum type for HTTP methods.

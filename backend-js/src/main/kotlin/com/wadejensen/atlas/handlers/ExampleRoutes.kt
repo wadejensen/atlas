@@ -4,9 +4,9 @@ import com.wadejensen.atlas.model.Person
 import com.wadejensen.atlas.SharedClass
 import express.http.ExpressRequest
 import express.http.ExpressResponse
-import express.http.Method
+import com.wadejensen.atlas.kotlinjs.http.Method
 import com.wadejensen.atlas.kotlinjs.http.Request
-import com.wadejensen.atlas.kotlinjs.http.fetch
+import kotlinjs.http.fetch
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.await
 import org.w3c.fetch.Response

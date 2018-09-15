@@ -1,6 +1,5 @@
 package com.wadejensen.atlas.kotlinjs.http
 
-import express.http.Method
 import org.w3c.fetch.*
 import kotlin.js.json
 
@@ -9,18 +8,18 @@ import kotlin.js.json
  * Primarily used in calls to [[org.w3c.fetch]]
  */
 fun Request(
-        method: Method = Method.GET,
-        headers: Map<String, String?>? = null,
-        body: Any? = null,
-        referrer: String? = null,
-        referrerPolicy: dynamic = null,
-        mode: RequestMode? = null,
-        credentials: RequestCredentials? = null,
-        cache: RequestCache? = null,
-        redirect: RequestRedirect? = null,
-        integrity: String? = null,
-        keepalive: Boolean? = null,
-        window: Any? = null): RequestInit {
+    method: Method = Method.GET,
+    headers: Map<String, String?>? = mapOf(),
+    body: Any? = "",
+    referrer: String? = "",
+    referrerPolicy: dynamic = "no-referrer",
+    mode: RequestMode? = RequestMode.NO_CORS,
+    credentials: RequestCredentials? = RequestCredentials.OMIT,
+    cache: RequestCache? = RequestCache.NO_STORE,
+    redirect: RequestRedirect? = RequestRedirect.FOLLOW,
+    integrity: String? = "",
+    keepalive: Boolean? = null,
+    window: Any? = null): RequestInit {
 
     val o = js("({})")
 

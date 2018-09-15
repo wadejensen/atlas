@@ -6,10 +6,10 @@ import com.wadejensen.atlas.model.Listing
 
 import kotlinx.serialization.json.JSON as Json
 
-import express.http.Method
+import com.wadejensen.atlas.kotlinjs.http.Method
 import org.w3c.fetch.Response
 import com.wadejensen.atlas.kotlinjs.http.Request
-import com.wadejensen.atlas.kotlinjs.http.fetch
+import kotlinjs.http.fetch
 import kotlinx.coroutines.experimental.await
 import org.funktionale.Try
 

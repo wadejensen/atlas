@@ -1,4 +1,4 @@
-package com.wadejensen.atlas.kotlinjs.http
+package kotlinjs.http
 
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response

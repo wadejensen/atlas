@@ -5,6 +5,7 @@
 
 package express.http
 
+import com.wadejensen.atlas.kotlinjs.http.Method
 import express.JSONUtils
 
 class ExpressRequest(external private val req: dynamic) {

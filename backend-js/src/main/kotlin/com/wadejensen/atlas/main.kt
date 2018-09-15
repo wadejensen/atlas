@@ -2,6 +2,7 @@ package com.wadejensen.atlas
 
 import com.wadejensen.atlas.flatmates.FlatmatesClient
 import com.wadejensen.atlas.flatmates.model.RoomType
+import com.wadejensen.atlas.flatmates.routes.mapMarkersHandler
 import com.wadejensen.atlas.handlers.*
 import express.Application
 import express.http.ExpressRequest
@@ -30,6 +31,9 @@ fun start() {
     // Create Node.js Express app
     val app = Application()
 
+    val bodyParser = require("body-parser")
+    app.use(bodyParser.json())
+    
     // Show off that I can share code between client and server
     val shared = SharedClass(Console(), Math())
     println(shared.givePrimes(2))
@@ -75,6 +79,10 @@ suspend fun setupAtlas(app: Application, shared: SharedClass): FlatmatesClient {
 }
 
 fun setupRoutes(app: Application, shared: SharedClass, flatmatesClient: FlatmatesClient): Unit {
+
+
+    app.post("/getMapMarkers") { req, res -> mapMarkersHandler(flatmatesClient, req, res) }
+
     app.get("/primes") { req, res -> printPlatformSpecificPrimes(req, res, shared) }
     app.get("/async-get") { req, res -> asyncHttpGet(req, res) }
     app.get("/async-post") { req: ExpressRequest, res: ExpressResponse -> asyncHttpPost(req, res) }

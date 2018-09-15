@@ -21,14 +21,13 @@ external val __dirname: dynamic
  * See from https://github.com/blazer82/pappel-framework
  */
 class Application {
-    private val express: dynamic = require("express")
+
+    val express: dynamic = require("express")
     private val app: dynamic = express()
-    private val expressRouter: ExpressRouter = express.Router()
+    val expressRouter: ExpressRouter = express.Router()
 
     fun startHttpServer(port: Int): Unit {
         println("Starting server on port ${port}.")
-        val bodyParser = require("body-parser")
-        app.use(bodyParser.raw())
         val http = require("http")
         http.createServer(this.app)
         listen(port) // TODO accept callback lambda
@@ -114,6 +113,13 @@ class Application {
      */
     fun use(path: String, expressRouter: ExpressRouter) {
         app.use(path, expressRouter.expressRouter)
+    }
+
+    /**
+     * Enables body parsing
+     */
+    fun use(parser: dynamic) {
+        app.use(parser)
     }
 
     /**
