@@ -1,15 +1,11 @@
 package com.wadejensen.atlas
 
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.await
 import kotlinx.html.id
 import kotlinx.html.style
 import react.*
 import react.dom.div
-import kotlin.browser.document
-import kotlin.js.Promise
 
-class GoogleMap: RComponent<RProps, GoogleMap.State>() {
+class GoogleMapDiv(id: String): RComponent<RProps, GoogleMapDiv.State>() {
     override fun RBuilder.render() {
         div(classes = "mx-auto my-4") {
             attrs.id = "map"
@@ -25,4 +21,4 @@ class GoogleMap: RComponent<RProps, GoogleMap.State>() {
     }
 }
 
-fun RBuilder.googleMap() = child(GoogleMap::class) {}
+//fun RBuilder.googleMapDiv() = child(GoogleMapDiv::class) {}
