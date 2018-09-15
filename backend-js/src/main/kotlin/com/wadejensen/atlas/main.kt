@@ -3,13 +3,10 @@ package com.wadejensen.atlas
 import com.wadejensen.atlas.flatmates.FlatmatesClient
 import com.wadejensen.atlas.flatmates.model.RoomType
 import com.wadejensen.atlas.handlers.*
-import com.wadejensen.example.Console
-import com.wadejensen.example.Math
-import com.wadejensen.example.SharedClass
 import express.Application
 import express.http.ExpressRequest
 import express.http.ExpressResponse
-import kotlinjs.require
+import com.wadejensen.atlas.kotlinjs.require
 import kotlinx.coroutines.experimental.async
 import org.funktionale.*
 import kotlinx.serialization.json.JSON as Json

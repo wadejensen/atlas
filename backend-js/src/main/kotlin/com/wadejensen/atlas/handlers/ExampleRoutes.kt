@@ -1,12 +1,12 @@
 package com.wadejensen.atlas.handlers
 
 import com.wadejensen.atlas.model.Person
-import com.wadejensen.example.SharedClass
+import com.wadejensen.atlas.SharedClass
 import express.http.ExpressRequest
 import express.http.ExpressResponse
 import express.http.Method
-import kotlinjs.http.Request
-import kotlinjs.http.fetch
+import com.wadejensen.atlas.kotlinjs.http.Request
+import com.wadejensen.atlas.kotlinjs.http.fetch
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.await
 import org.w3c.fetch.Response

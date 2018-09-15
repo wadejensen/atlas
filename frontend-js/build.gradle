@@ -3,10 +3,19 @@ apply plugin: 'kotlin2js'
 apply plugin: 'kotlin-dce-js'
 
 dependencies {
-    compile "org.jetbrains.kotlin:kotlin-stdlib-js:$kotlinVersion"
-    compile 'org.jetbrains.kotlinx:kotlinx-html-js:0.6.11'
+    compile libraries.kotlin_stdlib_js
+    compile libraries.kotlinx_html_js
+    compile libraries.kotlin_react
+    compile libraries.kotlin_react_dom
+    compile libraries.kotlin_serialization_js
+    compile libraries.kotlin_coroutines_js
     compile project(':common-js')
-    compile "org.jetbrains.kotlin:kotlin-test-js:$kotlinVersion" // for now only compile configuration is supported
+    compile libraries.kotlin_test_js
+}
+
+repositories {
+    maven { url "https://kotlin.bintray.com/kotlinx" }
+    maven { url "https://kotlin.bintray.com/kotlin-js-wrappers" }
 }
 
 compileKotlin2Js {
@@ -42,7 +51,7 @@ task webpack(type: Exec) {
     outputs.dir(webDir)
 
     commandLine "$projectDir/node_modules/.bin/webpack",
-            "--mode", "production",
+            "--mode", "development",
             "--entry", "${outputDir}/frontend-js.js",
             "--output", "${webDir}/${bundleFilename}"
 }

@@ -1,6 +1,5 @@
-package com.wadejensen.example
+package com.wadejensen.atlas
 
-import com.wadejensen.example.IConsole
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

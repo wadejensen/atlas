@@ -40,6 +40,9 @@ ext {
     nodeVersion = '8.11.4'
     qunitVersion = '2.6.2'
     coroutinesVersion = "0.24.0"
+    kotlinxHtmlJsVersion = '0.6.11'
+    kotlinReactVersion = "16.5.0-pre.52-kotlin--$kotlinVersion"
+    kotlinReactDomVersion = "16.5.0-pre.52-kotlin-$kotlinVersion"
 
     libraries = [
         junit: "junit:junit:4.12",
@@ -56,6 +59,9 @@ ext {
         kotlin_coroutines: "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutinesVersion",
         kotlin_coroutines_common: "org.jetbrains.kotlinx:kotlinx-coroutines-core-common:$coroutinesVersion",
         kotlin_coroutines_js: "org.jetbrains.kotlinx:kotlinx-coroutines-core-js:$coroutinesVersion",
+        kotlinx_html_js: "org.jetbrains.kotlinx:kotlinx-html-js:$kotlinxHtmlJsVersion",
+        kotlin_react: "org.jetbrains:kotlin-react:$kotlinReactVersion",
+        kotlin_react_dom: "org.jetbrains:kotlin-react-dom:$kotlinReactDomVersion",
     ]
 }
 

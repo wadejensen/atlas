@@ -1,4 +1,4 @@
-package kotlinjs.http
+package com.wadejensen.atlas.kotlinjs.http
 
 import express.http.Method
 import org.w3c.fetch.*

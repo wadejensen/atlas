@@ -7,7 +7,7 @@ package express
 
 import express.http.ExpressRequest
 import express.http.ExpressResponse
-import kotlinjs.require
+import com.wadejensen.atlas.kotlinjs.require
 
 external val process: dynamic
 external val __dirname: dynamic

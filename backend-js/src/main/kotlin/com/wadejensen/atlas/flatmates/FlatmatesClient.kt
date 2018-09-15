@@ -8,8 +8,8 @@ import kotlinx.serialization.json.JSON as Json
 
 import express.http.Method
 import org.w3c.fetch.Response
-import kotlinjs.http.Request
-import kotlinjs.http.fetch
+import com.wadejensen.atlas.kotlinjs.http.Request
+import com.wadejensen.atlas.kotlinjs.http.fetch
 import kotlinx.coroutines.experimental.await
 import org.funktionale.Try
 

@@ -1,4 +1,4 @@
-package com.wadejensen.example
+package com.wadejensen.atlas
 
 // The `expect` keyword declares that the common platform module expects that at compile time their exists a Math class
 // which satisfies the interface IMath for the specific target platform

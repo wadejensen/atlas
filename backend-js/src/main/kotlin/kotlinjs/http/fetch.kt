@@ -1,4 +1,4 @@
-package kotlinjs.http
+package com.wadejensen.atlas.kotlinjs.http
 
 import org.w3c.fetch.RequestInit
 import org.w3c.fetch.Response
@@ -13,5 +13,5 @@ fun fetch(input: dynamic, init: RequestInit): Promise<Response> {
 }
 
 object Fetch {
-    val jsFetch: dynamic = kotlinjs.require("node-fetch")
+    val jsFetch: dynamic = com.wadejensen.atlas.kotlinjs.require("node-fetch")
 }
